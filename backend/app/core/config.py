@@ -21,24 +21,40 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://interview_user:interview_pass@localhost:5432/interview_coach_db"
     sync_database_url: str = "postgresql://interview_user:interview_pass@localhost:5432/interview_coach_db"
 
-    use_ssl: bool = False  # Set to True in Render/production env vars
+    use_ssl: bool = False  # Set USE_SSL=true in Render env vars
 
     @property
     def formatted_database_url(self) -> str:
-        import re
+        from urllib.parse import urlparse, urlencode, parse_qs, urlunparse
+
         url = self.database_url
-        # 1. Strip ?sslmode=... (asyncpg uses ?ssl=require, not sslmode)
-        url = re.sub(r'[?&]sslmode=[^&]*', '', url)
-        # 2. Fix scheme: postgres:// and postgresql:// → postgresql+asyncpg://
+
+        # 1. Fix the scheme first
         if url.startswith("postgres://"):
             url = url.replace("postgres://", "postgresql+asyncpg://", 1)
         elif url.startswith("postgresql://") and "+asyncpg" not in url:
             url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
-        # 3. Append ssl=require if USE_SSL is set (set this to true in Render env vars)
+
+        # 2. Parse the URL and strip asyncpg-incompatible query params
+        parsed = urlparse(url)
+        # Parse query params, remove ones asyncpg doesn't support
+        UNSUPPORTED = {"sslmode", "channel_binding", "sslcert", "sslkey", "sslrootcert"}
+        params = {
+            k: v for k, v in parse_qs(parsed.query, keep_blank_values=True).items()
+            if k not in UNSUPPORTED
+        }
+
+        # 3. Add ssl=require if USE_SSL is configured
         if self.use_ssl:
-            separator = "&" if "?" in url else "?"
-            url = f"{url}{separator}ssl=require"
-        return url
+            params["ssl"] = ["require"]
+
+        # 4. Reconstruct the clean URL
+        clean_query = urlencode({k: v[0] for k, v in params.items()})
+        clean_url = urlunparse((
+            parsed.scheme, parsed.netloc, parsed.path,
+            parsed.params, clean_query, parsed.fragment,
+        ))
+        return clean_url
 
 
 
