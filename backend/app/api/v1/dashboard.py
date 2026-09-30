@@ -403,24 +403,17 @@ async def get_dashboard_stats(
     )
     all_evals = evals_result.scalars().all()
 
-    # Build category analysis objects with per-category distinct feedback
-    category_analysis = [
-        _build_category_analysis(
-            "technical", "Technical Accuracy", tech_avg, all_evals,
-        ),
-        _build_category_analysis(
-            "communication", "Communication", comm_avg, all_evals,
-        ),
-        _build_category_analysis(
-            "clarity", "Clarity", clar_avg, all_evals,
-        ),
-        _build_category_analysis(
-            "relevance", "Relevance", rel_avg, all_evals,
-        ),
-        _build_category_analysis(
-            "completeness", "Completeness", comp_avg, all_evals,
-        ),
-    ]
+    # Only build category analysis if user has completed at least one interview
+    if completed_interviews > 0:
+        category_analysis = [
+            _build_category_analysis("technical",     "Technical Accuracy", tech_avg, all_evals),
+            _build_category_analysis("communication", "Communication",      comm_avg, all_evals),
+            _build_category_analysis("clarity",       "Clarity",            clar_avg, all_evals),
+            _build_category_analysis("relevance",     "Relevance",          rel_avg,  all_evals),
+            _build_category_analysis("completeness",  "Completeness",       comp_avg, all_evals),
+        ]
+    else:
+        category_analysis = []
 
     return DashboardStats(
         total_interviews=total_interviews,
