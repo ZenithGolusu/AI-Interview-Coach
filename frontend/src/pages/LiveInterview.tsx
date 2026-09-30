@@ -40,7 +40,7 @@ export default function LiveInterview() {
   // Local UI states
   const [textAnswer, setTextAnswer] = useState('');
   const [isAudioMuted, setIsAudioMuted] = useState(false);
-  const [isAutoFlowEnabled, setIsAutoFlowEnabled] = useState(true);
+  const [isAutoFlowEnabled, setIsAutoFlowEnabled] = useState(false);
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const [timeRemainingSeconds, setTimeRemainingSeconds] = useState<number | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
@@ -79,12 +79,13 @@ export default function LiveInterview() {
     isTranscribingAudio,
     startListening,
     stopListening,
+    stopListeningAndSubmit,
     resetTranscript,
   } = useLiveSpeech({
     silenceTimeoutMs: 3500,
     autoSubmitOnSilence: isAutoFlowEnabled,
     onTranscriptComplete: (finalText) => {
-      if (finalText && finalText.trim().length > 3) {
+      if (finalText && finalText.trim().length > 1) {
         submitAnswerRef.current(finalText.trim());
       }
     },
@@ -435,11 +436,7 @@ export default function LiveInterview() {
     }
 
     if (isListening) {
-      stopListening();
-      const text = combinedTranscript.trim();
-      if (text.length > 0) {
-        submitAnswerRef.current(text);
-      }
+      await stopListeningAndSubmit();
     } else {
       resetTranscript();
       try {
@@ -893,27 +890,11 @@ export default function LiveInterview() {
           {isListening && (
             <Button
               size="sm"
-              onClick={() => {
-                const text = combinedTranscript.trim();
-                if (text.length > 0) {
-                  submitAnswerRef.current(text);
-                } else {
-                  stopListening();
-                }
-              }}
+              onClick={stopListeningAndSubmit}
               className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-5 py-2 rounded-full shadow-lg shadow-emerald-500/20 animate-fade-in flex items-center gap-2 cursor-pointer"
             >
-              {combinedTranscript.trim().length > 0 ? (
-                <>
-                  <CheckCircle2 className="w-4 h-4" />
-                  Done Speaking (Submit Answer)
-                </>
-              ) : (
-                <>
-                  <Square className="w-3.5 h-3.5 fill-current" />
-                  Stop Listening
-                </>
-              )}
+              <CheckCircle2 className="w-4 h-4" />
+              Done Speaking (Submit Answer)
             </Button>
           )}
         </div>

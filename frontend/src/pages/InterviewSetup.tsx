@@ -96,9 +96,9 @@ export default function InterviewSetup() {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-8">
+    <div className="p-4 sm:p-8 max-w-4xl mx-auto space-y-6 sm:space-y-8">
       <div>
-        <h1 className="text-3xl font-display font-bold text-white mb-2">Configure Interview</h1>
+        <h1 className="text-2xl sm:text-3xl font-display font-bold text-white mb-2">Configure Interview</h1>
         <p className="text-slate-400">Set up your AI mock interview parameters to match your target role.</p>
       </div>
 
