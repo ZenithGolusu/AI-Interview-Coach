@@ -151,7 +151,7 @@ export default function Report() {
     : [];
 
   return (
-    <div className="p-4 lg:p-8 max-w-5xl mx-auto space-y-6 animate-fade-in">
+    <div className="p-3 sm:p-4 lg:p-8 max-w-5xl mx-auto space-y-4 sm:space-y-6 animate-fade-in">
       {/* Header Actions */}
       <div className="flex justify-between items-center">
         <Button variant="ghost" asChild className="text-slate-400 hover:text-white">
@@ -170,7 +170,7 @@ export default function Report() {
         </Button>
       </div>
 
-      <div id="report-content" className="space-y-8 bg-surface-950 p-6 rounded-3xl border border-surface-200/10 shadow-2xl">
+      <div id="report-content" className="space-y-6 sm:space-y-8 bg-surface-950 p-3 sm:p-6 rounded-2xl sm:rounded-3xl border border-surface-200/10 shadow-2xl">
         {/* Main Score Banner */}
         <Card className="border border-brand-500/30 bg-gradient-to-br from-brand-950/80 via-surface-900 to-violet-950/60 shadow-2xl relative overflow-hidden rounded-2xl">
           <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
@@ -429,14 +429,67 @@ export default function Report() {
                     {/* Header bar of the question */}
                     <div
                       onClick={() => toggleQuestion(q.id)}
-                      className="p-5 flex items-start justify-between gap-4 cursor-pointer select-none group"
+                      className="p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 cursor-pointer select-none group"
                     >
-                      <div className="flex items-start gap-3.5 flex-1">
+                      {/* Mobile Top Row: Q badge + Category + Score + Chevron */}
+                      <div className="flex sm:hidden items-center justify-between w-full">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="w-7 h-7 rounded-lg bg-brand-500/15 border border-brand-500/30 text-brand-300 text-xs font-bold flex items-center justify-center shrink-0 shadow-sm">
+                            Q{q.sequence_number || idx + 1}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full bg-surface-800 text-slate-300 text-[11px] font-medium capitalize truncate">
+                            {q.category || 'Technical'}
+                          </span>
+                          <span className="text-slate-500 text-xs">•</span>
+                          <span className="text-slate-400 text-[11px] capitalize shrink-0">
+                            {q.difficulty_level || 'Medium'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {qScore !== undefined && qScore !== null && (
+                            <span
+                              className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                                qScore >= 8.0
+                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                  : qScore >= 6.0
+                                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                                  : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                              }`}
+                            >
+                              {qScore <= 10 ? `${qScore.toFixed(1)}/10` : `${qScore}/100`}
+                            </span>
+                          )}
+                          <div className="p-1 rounded-lg text-slate-400 group-hover:text-white transition-colors">
+                            {isExpanded ? (
+                              <ChevronUp className="w-4 h-4" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Mobile Full-Width Question Text */}
+                      <div className="sm:hidden w-full space-y-2 pt-0.5">
+                        <p className="text-sm font-medium text-white leading-relaxed break-words">
+                          {q.text}
+                        </p>
+                        {q.topic && (
+                          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                            <span className="px-2 py-0.5 rounded-full bg-surface-800/80 text-brand-300/90 text-[11px] font-medium">
+                              {q.topic}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Desktop Left: Q badge + Question text */}
+                      <div className="hidden sm:flex items-start gap-3.5 flex-1 min-w-0">
                         <span className="w-7 h-7 rounded-xl bg-brand-500/15 border border-brand-500/30 text-brand-300 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
                           Q{q.sequence_number || idx + 1}
                         </span>
-                        <div className="space-y-1.5 flex-1">
-                          <p className="text-base font-medium text-white group-hover:text-brand-300 transition-colors leading-relaxed">
+                        <div className="space-y-1.5 flex-1 min-w-0">
+                          <p className="text-base font-medium text-white group-hover:text-brand-300 transition-colors leading-relaxed break-words">
                             {q.text}
                           </p>
                           <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -456,7 +509,8 @@ export default function Report() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 shrink-0">
+                      {/* Desktop Right: Score badge + Chevron */}
+                      <div className="hidden sm:flex items-center gap-3 shrink-0">
                         {qScore !== undefined && qScore !== null && (
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-bold border ${
@@ -482,7 +536,7 @@ export default function Report() {
 
                     {/* Expandable Accordion Body */}
                     {isExpanded && (
-                      <div className="p-5 pt-0 space-y-5 border-t border-surface-800/60 mt-1 animate-fade-in">
+                      <div className="p-3.5 sm:p-5 pt-0 space-y-4 sm:space-y-5 border-t border-surface-800/60 mt-1 animate-fade-in">
                         {/* 1. Candidate's Response */}
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">

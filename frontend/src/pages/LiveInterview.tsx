@@ -76,11 +76,12 @@ export default function LiveInterview() {
     combinedTranscript,
     audioLevel,
     silenceCountdown,
+    isTranscribingAudio,
     startListening,
     stopListening,
     resetTranscript,
   } = useLiveSpeech({
-    silenceTimeoutMs: 2000,
+    silenceTimeoutMs: 3500,
     autoSubmitOnSilence: isAutoFlowEnabled,
     onTranscriptComplete: (finalText) => {
       if (finalText && finalText.trim().length > 3) {
@@ -535,122 +536,231 @@ export default function LiveInterview() {
   const isTimeCritical = timeRemainingSeconds !== null && timeRemainingSeconds < 60;
 
   return (
-    <div className="flex flex-col min-h-screen bg-surface-950 p-4 lg:p-8 relative selection:bg-brand-500 selection:text-white">
+    <div className="flex flex-col min-h-screen bg-surface-950 p-3 sm:p-4 lg:p-8 relative selection:bg-brand-500 selection:text-white">
       <audio ref={audioRef} className="hidden" />
 
       {/* ─── Header Navigation Bar ────────────────────────────────────────────── */}
-      <header className="flex justify-between items-center mb-6 bg-surface-900/60 backdrop-blur-xl p-4 rounded-2xl border border-surface-200/10 shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-accent-violet flex items-center justify-center shadow-lg shadow-brand-500/20">
-            <Radio className="w-5 h-5 text-white animate-pulse" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg font-display font-bold text-white tracking-wide">
-                {interview?.target_role}
-              </h1>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30">
-                Live Session
-              </span>
+      <header className="mb-4 sm:mb-6 bg-surface-900/60 backdrop-blur-xl p-3 sm:p-4 rounded-2xl border border-surface-200/10 shadow-lg">
+        {/* Desktop View (md+) */}
+        <div className="hidden md:flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-accent-violet flex items-center justify-center shadow-lg shadow-brand-500/20 shrink-0">
+              <Radio className="w-5 h-5 text-white animate-pulse" />
             </div>
-            <p className="text-xs text-slate-400 capitalize">
-              {interview?.mode.replace('_', ' ')} • {interview?.difficulty} Level
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-display font-bold text-white tracking-wide truncate max-w-sm">
+                  {interview?.target_role}
+                </h1>
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 shrink-0">
+                  Live Session
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 capitalize">
+                {interview?.mode.replace('_', ' ')} • {interview?.difficulty} Level
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Live Countdown Timer */}
+            <div
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-mono font-bold tracking-wider border transition-all duration-300 ${
+                isTimeCritical
+                  ? 'bg-rose-500/20 border-rose-500/50 text-rose-400 animate-pulse shadow-lg shadow-rose-500/20'
+                  : isTimeLow
+                  ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
+                  : 'bg-surface-800/90 border-surface-700/80 text-brand-300 shadow-sm'
+              }`}
+              title="Interview time remaining"
+            >
+              {isTimeCritical ? (
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-400 animate-bounce" />
+              ) : (
+                <Clock className="w-3.5 h-3.5 text-brand-400" />
+              )}
+              <span>{formatTime(timeRemainingSeconds)}</span>
+            </div>
+
+            {/* Hands-free Auto-flow Toggle */}
+            <button
+              onClick={() => setIsAutoFlowEnabled(!isAutoFlowEnabled)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border cursor-pointer ${
+                isAutoFlowEnabled
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-sm shadow-emerald-500/10'
+                  : 'bg-surface-800 border-surface-700 text-slate-400'
+              }`}
+              title="When active, AI listens and submits automatically when you finish speaking"
+            >
+              <Zap className={`w-3.5 h-3.5 ${isAutoFlowEnabled ? 'text-emerald-400 animate-pulse' : ''}`} />
+              <span>{isAutoFlowEnabled ? 'Auto-Flow: On' : 'Auto-Flow: Off'}</span>
+            </button>
+
+            {/* Replay Question Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-slate-400 hover:text-white text-xs gap-1.5"
+              onClick={() => {
+                if (currentQuestion) {
+                  playQuestionAudio(
+                    currentQuestion.text,
+                    (interview?.voice_gender as 'male' | 'female') || 'female'
+                  );
+                }
+              }}
+              disabled={isAiSpeaking || isEvaluating}
+              title="Replay question audio"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Replay</span>
+            </Button>
+
+            {/* Mute Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                const nextMuted = !isAudioMuted;
+                setIsAudioMuted(nextMuted);
+                if (nextMuted) {
+                  stopAllAudio();
+                }
+              }}
+              className="rounded-full hover:bg-surface-800"
+            >
+              {isAudioMuted ? (
+                <VolumeX className="w-4 h-4 text-slate-500" />
+              ) : (
+                <Volume2 className="w-4 h-4 text-brand-400" />
+              )}
+            </Button>
+
+            {/* End / Exit Interview Button */}
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setShowExitModal(true)}
+              className="bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 rounded-full text-xs font-semibold px-3.5 h-8 gap-1.5 transition-all shadow-sm cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>End Session</span>
+            </Button>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* ─── Persistent Live Countdown Timer ────────────────────────────── */}
-          <div
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-mono font-bold tracking-wider border transition-all duration-300 ${
-              isTimeCritical
-                ? 'bg-rose-500/20 border-rose-500/50 text-rose-400 animate-pulse shadow-lg shadow-rose-500/20'
-                : isTimeLow
-                ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
-                : 'bg-surface-800/90 border-surface-700/80 text-brand-300 shadow-sm'
-            }`}
-            title="Interview time remaining (persists across page reloads)"
-          >
-            {isTimeCritical ? (
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-400 animate-bounce" />
-            ) : (
-              <Clock className="w-3.5 h-3.5 text-brand-400" />
-            )}
-            <span>{formatTime(timeRemainingSeconds)}</span>
+        {/* Mobile View (< md): Clean 2-Row Stacked Layout, Zero Horizontal Scroll */}
+        <div className="flex md:hidden flex-col gap-2.5">
+          {/* Mobile Row 1: Role & Mode on left, End Session on right */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-500 to-accent-violet flex items-center justify-center shrink-0">
+                <Radio className="w-3.5 h-3.5 text-white animate-pulse" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <h1 className="text-sm font-display font-bold text-white tracking-wide truncate max-w-[150px]">
+                    {interview?.target_role}
+                  </h1>
+                  <span className="text-[9px] uppercase font-bold px-1.5 py-0.2 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 shrink-0">
+                    Live
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 capitalize truncate">
+                  {interview?.mode.replace('_', ' ')} • {interview?.difficulty}
+                </p>
+              </div>
+            </div>
+
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setShowExitModal(true)}
+              className="bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 rounded-full text-xs font-semibold px-3 h-7 gap-1 shrink-0 cursor-pointer"
+            >
+              <LogOut className="w-3 h-3" />
+              <span>End</span>
+            </Button>
           </div>
 
-          {/* Hands-free Auto-flow Toggle */}
-          <button
-            onClick={() => setIsAutoFlowEnabled(!isAutoFlowEnabled)}
-            className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border ${
-              isAutoFlowEnabled
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-sm shadow-emerald-500/10'
-                : 'bg-surface-800 border-surface-700 text-slate-400'
-            }`}
-            title="When active, AI listens and submits automatically when you finish speaking"
-          >
-            <Zap className={`w-3.5 h-3.5 ${isAutoFlowEnabled ? 'text-emerald-400 animate-pulse' : ''}`} />
-            <span>{isAutoFlowEnabled ? 'Auto-Flow: On' : 'Auto-Flow: Off'}</span>
-          </button>
+          {/* Mobile Row 2: Timer on left, Action buttons on right */}
+          <div className="flex items-center justify-between pt-2 border-t border-surface-700/40 gap-2">
+            {/* Live Countdown Timer */}
+            <div
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-bold tracking-wider border shrink-0 ${
+                isTimeCritical
+                  ? 'bg-rose-500/20 border-rose-500/50 text-rose-400 animate-pulse'
+                  : isTimeLow
+                  ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
+                  : 'bg-surface-800/90 border-surface-700/80 text-brand-300'
+              }`}
+            >
+              {isTimeCritical ? (
+                <AlertTriangle className="w-3 h-3 text-rose-400 animate-bounce" />
+              ) : (
+                <Clock className="w-3 h-3 text-brand-400" />
+              )}
+              <span>{formatTime(timeRemainingSeconds)}</span>
+            </div>
 
-          {/* Replay Question Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-slate-400 hover:text-white text-xs gap-1.5"
-            onClick={() => {
-              if (currentQuestion) {
-                playQuestionAudio(
-                  currentQuestion.text,
-                  (interview?.voice_gender as 'male' | 'female') || 'female'
-                );
-              }
-            }}
-            disabled={isAiSpeaking || isEvaluating}
-            title="Replay question audio"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Replay</span>
-          </Button>
+            {/* Mobile Controls: Auto-flow toggle + Replay + Mute */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={() => setIsAutoFlowEnabled(!isAutoFlowEnabled)}
+                className={`flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium border cursor-pointer ${
+                  isAutoFlowEnabled
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                    : 'bg-surface-800 border-surface-700 text-slate-400'
+                }`}
+                title="Auto-listen toggle"
+              >
+                <Zap className={`w-3 h-3 ${isAutoFlowEnabled ? 'text-emerald-400' : ''}`} />
+                <span>{isAutoFlowEnabled ? 'Auto' : 'Manual'}</span>
+              </button>
 
-          {/* Mute Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              const nextMuted = !isAudioMuted;
-              setIsAudioMuted(nextMuted);
-              if (nextMuted) {
-                stopAllAudio();
-              }
-            }}
-            className="rounded-full hover:bg-surface-800"
-          >
-            {isAudioMuted ? (
-              <VolumeX className="w-4 h-4 text-slate-500" />
-            ) : (
-              <Volume2 className="w-4 h-4 text-brand-400" />
-            )}
-          </Button>
+              <button
+                onClick={() => {
+                  if (currentQuestion) {
+                    playQuestionAudio(
+                      currentQuestion.text,
+                      (interview?.voice_gender as 'male' | 'female') || 'female'
+                    );
+                  }
+                }}
+                disabled={isAiSpeaking || isEvaluating}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white bg-surface-800/70 border border-surface-700/60 disabled:opacity-40 cursor-pointer"
+                title="Replay question"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
 
-          {/* ─── End / Exit Interview Button ──────────────────────────────────── */}
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => setShowExitModal(true)}
-            className="bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 rounded-full text-xs font-semibold px-3 h-8 gap-1.5 transition-all shadow-sm"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>End Session</span>
-          </Button>
+              <button
+                onClick={() => {
+                  const nextMuted = !isAudioMuted;
+                  setIsAudioMuted(nextMuted);
+                  if (nextMuted) {
+                    stopAllAudio();
+                  }
+                }}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white bg-surface-800/70 border border-surface-700/60 cursor-pointer"
+                title={isAudioMuted ? 'Unmute' : 'Mute'}
+              >
+                {isAudioMuted ? (
+                  <VolumeX className="w-3.5 h-3.5 text-slate-500" />
+                ) : (
+                  <Volume2 className="w-3.5 h-3.5 text-brand-400" />
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 
       {/* ─── Main Content Grid ────────────────────────────────────────────────── */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-6xl mx-auto w-full">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center max-w-6xl mx-auto w-full">
         {/* ─── Left Side: AI Interactive Orb & Visualizer ─────────────────── */}
-        <div className="lg:col-span-5 flex flex-col items-center justify-center space-y-6">
-          <div className="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center">
+        <div className="lg:col-span-5 flex flex-col items-center justify-center space-y-4 sm:space-y-6">
+          <div className="relative w-48 h-48 sm:w-64 sm:h-64 flex items-center justify-center">
             {/* Outer Ripple Wave 1 (AI Speaking) */}
             {isAiSpeaking && (
               <>
@@ -659,7 +769,7 @@ export default function LiveInterview() {
                   style={{ animationDuration: '2.4s' }}
                 />
                 <div
-                  className="absolute inset-6 bg-accent-violet/25 rounded-full animate-ping pointer-events-none"
+                  className="absolute inset-4 sm:inset-6 bg-accent-violet/25 rounded-full animate-ping pointer-events-none"
                   style={{ animationDuration: '1.8s', animationDelay: '0.3s' }}
                 />
               </>
@@ -670,7 +780,7 @@ export default function LiveInterview() {
               <div
                 className="absolute inset-0 rounded-full bg-emerald-500/20 transition-all duration-75 pointer-events-none"
                 style={{
-                  transform: `scale(${1 + Math.min(0.35, audioLevel / 200)})`,
+                  transform: `scale(${1 + Math.min(0.25, audioLevel / 250)})`,
                   opacity: Math.min(0.6, audioLevel / 100 + 0.1),
                 }}
               />
@@ -680,9 +790,11 @@ export default function LiveInterview() {
             <button
               onClick={handleMicToggle}
               disabled={isEvaluating}
-              className={`relative z-10 w-48 h-48 sm:w-56 sm:h-56 rounded-full p-1.5 shadow-2xl transition-all duration-500 flex items-center justify-center cursor-pointer group focus:outline-none ${
+              className={`relative z-10 w-40 h-40 sm:w-56 sm:h-56 rounded-full p-1.5 shadow-2xl transition-all duration-500 flex items-center justify-center cursor-pointer group focus:outline-none ${
                 isEvaluating
                   ? 'bg-gradient-to-tr from-amber-500 via-brand-500 to-purple-600 animate-spin glow-brand'
+                  : isTranscribingAudio
+                  ? 'bg-gradient-to-tr from-cyan-400 via-blue-500 to-indigo-500 animate-pulse glow-brand'
                   : isListening
                   ? 'bg-gradient-to-tr from-emerald-400 via-teal-500 to-cyan-400 shadow-emerald-500/30 shadow-2xl scale-105'
                   : isAiSpeaking
@@ -704,38 +816,45 @@ export default function LiveInterview() {
                 />
 
                 {/* Orb Icon and Live Indicator */}
-                <div className="relative z-10 flex flex-col items-center">
+                <div className="relative z-10 flex flex-col items-center text-center px-2">
                   {isEvaluating ? (
                     <>
-                      <Loader2 className="w-12 h-12 text-amber-400 animate-spin mb-2" />
-                      <span className="text-xs font-semibold text-amber-300 uppercase tracking-wider">
+                      <Loader2 className="w-9 h-9 sm:w-12 sm:h-12 text-amber-400 animate-spin mb-1.5" />
+                      <span className="text-[11px] sm:text-xs font-semibold text-amber-300 uppercase tracking-wider">
                         Evaluating...
+                      </span>
+                    </>
+                  ) : isTranscribingAudio ? (
+                    <>
+                      <Loader2 className="w-9 h-9 sm:w-12 sm:h-12 text-cyan-400 animate-spin mb-1.5" />
+                      <span className="text-[11px] sm:text-xs font-semibold text-cyan-300 uppercase tracking-wider">
+                        Transcribing...
                       </span>
                     </>
                   ) : isListening ? (
                     <>
-                      <Mic className="w-12 h-12 text-emerald-400 animate-bounce mb-2" />
-                      <span className="text-xs font-semibold text-emerald-300 uppercase tracking-wider">
+                      <Mic className="w-9 h-9 sm:w-12 sm:h-12 text-emerald-400 animate-bounce mb-1.5" />
+                      <span className="text-[11px] sm:text-xs font-semibold text-emerald-300 uppercase tracking-wider">
                         Listening...
                       </span>
                       <span className="text-[10px] text-slate-400 mt-0.5">
                         {silenceCountdown !== null
-                          ? `Sending in ${silenceCountdown}s...`
-                          : 'Speak naturally'}
+                          ? `Auto-sending in ${silenceCountdown}s...`
+                          : 'Tap to submit'}
                       </span>
                     </>
                   ) : isAiSpeaking ? (
                     <>
-                      <Volume2 className="w-12 h-12 text-brand-300 animate-pulse mb-2" />
-                      <span className="text-xs font-semibold text-brand-300 uppercase tracking-wider">
+                      <Volume2 className="w-9 h-9 sm:w-12 sm:h-12 text-brand-300 animate-pulse mb-1.5" />
+                      <span className="text-[11px] sm:text-xs font-semibold text-brand-300 uppercase tracking-wider">
                         AI Speaking...
                       </span>
-                      <span className="text-[10px] text-slate-400 mt-0.5">Tap to interrupt</span>
+                      <span className="text-[10px] text-slate-400 mt-0.5">Tap to answer</span>
                     </>
                   ) : (
                     <>
-                      <Mic className="w-12 h-12 text-slate-400 group-hover:text-brand-400 transition-colors mb-2" />
-                      <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                      <Mic className="w-9 h-9 sm:w-12 sm:h-12 text-slate-400 group-hover:text-brand-400 transition-colors mb-1.5" />
+                      <span className="text-[11px] sm:text-xs font-semibold text-slate-300 uppercase tracking-wider">
                         Tap to Speak
                       </span>
                     </>
@@ -771,14 +890,30 @@ export default function LiveInterview() {
           </div>
 
           {/* Quick Action Button under Orb */}
-          {isListening && combinedTranscript.length > 0 && (
+          {isListening && (
             <Button
               size="sm"
-              onClick={() => submitAnswerRef.current(combinedTranscript)}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-5 py-2 rounded-full shadow-lg shadow-emerald-500/20 animate-fade-in flex items-center gap-2"
+              onClick={() => {
+                const text = combinedTranscript.trim();
+                if (text.length > 0) {
+                  submitAnswerRef.current(text);
+                } else {
+                  stopListening();
+                }
+              }}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-5 py-2 rounded-full shadow-lg shadow-emerald-500/20 animate-fade-in flex items-center gap-2 cursor-pointer"
             >
-              <CheckCircle2 className="w-4 h-4" />
-              Done Speaking (Submit Answer)
+              {combinedTranscript.trim().length > 0 ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  Done Speaking (Submit Answer)
+                </>
+              ) : (
+                <>
+                  <Square className="w-3.5 h-3.5 fill-current" />
+                  Stop Listening
+                </>
+              )}
             </Button>
           )}
         </div>
@@ -787,7 +922,7 @@ export default function LiveInterview() {
         <div className="lg:col-span-7 flex flex-col space-y-6 w-full">
           {/* Question Card */}
           <Card className="border-brand-500/30 bg-surface-900/80 backdrop-blur-xl shadow-xl shadow-brand-500/5 rounded-2xl overflow-hidden">
-            <CardContent className="p-6 sm:p-8">
+            <CardContent className="p-5 sm:p-8">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-bold uppercase tracking-wider text-brand-400 flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5" />
@@ -797,14 +932,14 @@ export default function LiveInterview() {
                   {currentQuestion.category || 'Technical'}
                 </span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-display font-medium text-white leading-relaxed">
+              <h2 className="text-lg sm:text-2xl font-display font-medium text-white leading-relaxed">
                 {currentQuestion.text}
               </h2>
             </CardContent>
           </Card>
 
           {/* Interaction Area */}
-          <div className="bg-surface-900/60 backdrop-blur-xl border border-surface-200/10 rounded-2xl p-6 relative overflow-hidden transition-all duration-300">
+          <div className="bg-surface-900/60 backdrop-blur-xl border border-surface-200/10 rounded-2xl p-4 sm:p-6 relative overflow-hidden transition-all duration-300">
             {/* Mode Switcher */}
             <div className="flex justify-between items-center mb-4">
               <span className="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
@@ -859,7 +994,17 @@ export default function LiveInterview() {
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full min-h-[100px] text-center text-slate-500">
-                      {isListening ? (
+                      {isEvaluating ? (
+                        <>
+                          <Loader2 className="w-5 h-5 text-amber-400 animate-spin mb-2" />
+                          <p className="text-sm text-amber-300 font-medium">Evaluating your answer...</p>
+                        </>
+                      ) : isTranscribingAudio ? (
+                        <>
+                          <Loader2 className="w-5 h-5 text-cyan-400 animate-spin mb-2" />
+                          <p className="text-sm text-cyan-300 font-medium">Transcribing voice recording...</p>
+                        </>
+                      ) : isListening ? (
                         <>
                           <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping mb-2" />
                           <p className="text-sm text-emerald-300 font-medium">
@@ -875,7 +1020,7 @@ export default function LiveInterview() {
                             AI is speaking the question...
                           </p>
                           <p className="text-xs text-slate-500 mt-1">
-                            Microphone will open automatically when AI finishes
+                            Tap the microphone orb when you are ready to answer
                           </p>
                         </>
                       ) : (

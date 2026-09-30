@@ -49,9 +49,10 @@ class GroqSTTProvider:
 
         logger.debug("STT transcription request", model=self.model, audio_size=len(audio_bytes))
 
+        content_type = "audio/mp4" if filename.endswith((".mp4", ".m4a")) else "audio/wav" if filename.endswith(".wav") else "audio/webm"
         transcript = await self.client.audio.transcriptions.create(
             model=self.model,
-            file=(filename, audio_bytes, "audio/webm"),
+            file=(filename, audio_bytes, content_type),
             language=language if language != "english" else "en",
             response_format="verbose_json",
         )

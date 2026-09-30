@@ -139,7 +139,10 @@ export const interviewApi = {
 export const speechApi = {
   transcribe: async (audioBlob: Blob, language = 'en'): Promise<{ transcript: string; duration?: number }> => {
     const formData = new FormData();
-    formData.append('audio', audioBlob, 'recording.webm');
+    const isMp4 = audioBlob.type.includes('mp4');
+    const isWav = audioBlob.type.includes('wav');
+    const filename = isMp4 ? 'recording.mp4' : isWav ? 'recording.wav' : 'recording.webm';
+    formData.append('audio', audioBlob, filename);
     formData.append('language', language);
     const r = await api.post('/speech/transcribe', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
