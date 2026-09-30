@@ -24,11 +24,19 @@ class Settings(BaseSettings):
     @property
     def formatted_database_url(self) -> str:
         url = self.database_url
+        # asyncpg uses 'ssl' not 'sslmode' — strip sslmode and inject ssl=require
+        import re
+        url = re.sub(r'[?&]sslmode=[^&]*', '', url)
         if url.startswith("postgres://"):
-            return url.replace("postgres://", "postgresql+asyncpg://", 1)
-        if url.startswith("postgresql://") and not url.startswith("postgresql+"):
-            return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        # Append ssl=require for Render/Neon hosted databases
+        if "render.com" in url or "neon.tech" in url or "amazonaws.com" in url:
+            separator = "&" if "?" in url else "?"
+            url = f"{url}{separator}ssl=require"
         return url
+
 
 
     # JWT
