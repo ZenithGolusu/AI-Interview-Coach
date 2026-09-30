@@ -15,7 +15,7 @@ import type {
   InterviewHistoryItem,
 } from '@/types';
 
-const BASE_URL = '/api/v1';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 // ─── Axios Instance ──────────────────────────────────────────────────────────
 
