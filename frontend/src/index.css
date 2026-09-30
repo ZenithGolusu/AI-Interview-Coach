@@ -40,6 +40,8 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  /* Prevent horizontal scroll on mobile */
+  overflow-x: hidden;
 }
 
 body {
@@ -47,8 +49,17 @@ body {
   background-color: var(--color-surface-950);
   color: #f1f5f9;
   min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height on mobile */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  /* Improve touch scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Safe area inset for iOS notch / home indicator */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* ─── Scrollbar ────────────────────────────────────────────────────────────── */
