@@ -3,7 +3,7 @@ import structlog
 import numpy as np
 from pathlib import Path
 from typing import Optional
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
 import faiss
 
 from app.core.config import get_settings
@@ -21,22 +21,22 @@ class FAISSVectorStore:
     """
 
     def __init__(self):
-        self._model: Optional[SentenceTransformer] = None
+        self._model: Optional[TextEmbedding] = None
         self.store_base_path = Path(settings.vector_store_path)
         self.store_base_path.mkdir(parents=True, exist_ok=True)
 
     @property
-    def model(self) -> SentenceTransformer:
+    def model(self) -> TextEmbedding:
         """Lazy load the embedding model."""
         if self._model is None:
-            logger.info("Loading sentence transformer model", model=settings.embedding_model)
-            self._model = SentenceTransformer(settings.embedding_model)
+            logger.info("Loading fastembed model", model="BAAI/bge-small-en-v1.5")
+            self._model = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
         return self._model
 
     def embed_texts(self, texts: list[str]) -> np.ndarray:
         """Generate embeddings for a list of texts."""
-        embeddings = self.model.encode(texts, normalize_embeddings=True, show_progress_bar=False)
-        return embeddings.astype(np.float32)
+        embeddings = list(self.model.embed(texts))
+        return np.array(embeddings, dtype=np.float32)
 
     def create_index(
         self,
