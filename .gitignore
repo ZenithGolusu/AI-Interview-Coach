@@ -1,0 +1,28 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment & Virtualenvs
+.env
+.env.local
+venv/
+env/
+ENV/
+
+# Node dependencies & builds
+node_modules/
+dist/
+build/
+
+# Uploads & local data
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/vector_store/*
+!backend/vector_store/.gitkeep
+
+# macOS metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db

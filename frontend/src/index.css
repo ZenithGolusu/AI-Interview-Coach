@@ -1,0 +1,360 @@
+@import "tailwindcss";
+
+
+@theme {
+  /* ─── Brand Colors (LeetCode Orange) ────────────────────────────────── */
+  --color-brand-50: #fffbf0;
+  --color-brand-100: #fff4d6;
+  --color-brand-200: #ffe4a3;
+  --color-brand-300: #ffd066;
+  --color-brand-400: #ffbc33;
+  --color-brand-500: #ffa116;
+  --color-brand-600: #e6880b;
+  --color-brand-700: #bf6704;
+  --color-brand-800: #994e00;
+  --color-brand-900: #7d3f00;
+
+  /* ─── Dark Surface (LeetCode Dark) ────────────────────────────────── */
+  --color-surface-50: #fafafa;
+  --color-surface-100: #f5f5f5;
+  --color-surface-200: #e5e5e5;
+  --color-surface-800: #4a4a4a;
+  --color-surface-850: #3e3e3e;
+  --color-surface-900: #282828;
+  --color-surface-950: #1a1a1a;
+
+  /* ─── Accent ───────────────────────────────────────────────────────── */
+  --color-accent-teal: #14b8a6;
+  --color-accent-violet: #8b5cf6;
+  --color-accent-rose: #f43f5e;
+  --color-accent-amber: #f59e0b;
+
+  /* ─── Typography ───────────────────────────────────────────────────── */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+}
+
+/* ─── Base Styles ──────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-surface-950);
+  color: #f1f5f9;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Scrollbar ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+/* ─── Glass Morphism Utilities ─────────────────────────────────────────────── */
+.glass {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-lighter {
+  background: rgba(30, 41, 59, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ─── Gradient Text ─────────────────────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #ffbc33 0%, #ffa116 50%, #e6880b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-warm {
+  background: linear-gradient(135deg, #f59e0b 0%, #f43f5e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Glow Effects ─────────────────────────────────────────────────────────── */
+.glow-brand {
+  box-shadow: 0 0 20px rgba(255, 161, 22, 0.3), 0 0 60px rgba(255, 161, 22, 0.1);
+}
+
+.glow-teal {
+  box-shadow: 0 0 20px rgba(20, 184, 166, 0.3), 0 0 60px rgba(20, 184, 166, 0.1);
+}
+
+.glow-violet {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3), 0 0 60px rgba(139, 92, 246, 0.1);
+}
+
+/* ─── Animations ────────────────────────────────────────────────────────────── */
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+@keyframes sound-wave {
+  0%, 100% { height: 4px; }
+  50% { height: 20px; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes recording-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+.animate-float { animation: float 4s ease-in-out infinite; }
+.animate-recording-pulse { animation: recording-pulse 1.5s ease-in-out infinite; }
+.animate-fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
+.animate-slide-in-right { animation: slideInRight 0.4s ease-out forwards; }
+.animate-scale-in { animation: scaleIn 0.22s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
+
+/* ─── Sound Wave Bars ───────────────────────────────────────────────────────── */
+.sound-wave {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 24px;
+}
+
+.sound-wave-bar {
+  width: 3px;
+  background: currentColor;
+  border-radius: 2px;
+  animation: sound-wave 1s ease-in-out infinite;
+}
+
+.sound-wave-bar:nth-child(1) { animation-delay: 0s; }
+.sound-wave-bar:nth-child(2) { animation-delay: 0.1s; }
+.sound-wave-bar:nth-child(3) { animation-delay: 0.2s; }
+.sound-wave-bar:nth-child(4) { animation-delay: 0.3s; }
+.sound-wave-bar:nth-child(5) { animation-delay: 0.4s; }
+
+/* ─── Shimmer Skeleton ──────────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+
+/* ─── Button Base ───────────────────────────────────────────────────────────── */
+.btn-primary {
+  background: linear-gradient(135deg, #ffa116, #ffbc33);
+  color: white;
+  font-weight: 600;
+  padding: 0.625rem 1.5rem;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(64, 96, 240, 0.4);
+}
+
+.btn-primary:active { transform: translateY(0); }
+
+.btn-secondary {
+  background: rgba(30, 41, 59, 0.8);
+  color: #94a3b8;
+  font-weight: 500;
+  padding: 0.625rem 1.5rem;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: rgba(51, 65, 85, 0.8);
+  color: #e2e8f0;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ─── Card Base ─────────────────────────────────────────────────────────────── */
+.card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  border-color: rgba(96, 128, 255, 0.3);
+}
+
+/* ─── Input Base ────────────────────────────────────────────────────────────── */
+.input-dark {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  color: #f1f5f9;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  outline: none;
+}
+
+.input-dark:focus {
+  border-color: #ffa116;
+  box-shadow: 0 0 0 3px rgba(96, 128, 255, 0.15);
+}
+
+.input-dark::placeholder { color: #64748b; }
+
+/* ─── Score Indicator ───────────────────────────────────────────────────────── */
+.score-excellent { color: #4ade80; }
+.score-good { color: #86efac; }
+.score-average { color: #fbbf24; }
+.score-poor { color: #f87171; }
+
+/* ─── Recording Button ──────────────────────────────────────────────────────── */
+.record-btn {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffa116, #e6880b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  position: relative;
+}
+
+.record-btn::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(96, 128, 255, 0.4);
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+.record-btn.recording {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  animation: recording-pulse 1.5s ease-in-out infinite;
+}
+
+.record-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(96, 128, 255, 0.5);
+}
+
+/* ─── Progress Bar ──────────────────────────────────────────────────────────── */
+.progress-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #ffa116, #ffbc33);
+  transition: width 0.4s ease;
+}
+
+/* ─── Status Badge ──────────────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.badge-blue { background: rgba(255, 161, 22, 0.15); color: #ffa116; border: 1px solid rgba(255, 161, 22, 0.3); }
+.badge-green { background: rgba(74, 222, 128, 0.1); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); }
+.badge-amber { background: rgba(251, 191, 36, 0.1); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+.badge-red { background: rgba(248, 113, 113, 0.1); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
+.badge-violet { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
+
+/* ─── AI Avatar Pulse ───────────────────────────────────────────────────────── */
+.ai-speaking-ring {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid rgba(96, 128, 255, 0.5);
+  animation: pulse-ring 1.5s ease-out infinite;
+}
+
+/* ─── Sidebar ───────────────────────────────────────────────────────────────── */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+}
+
+.sidebar-link.active {
+  background: rgba(96, 128, 255, 0.15);
+  color: #ffa116;
+  border: 1px solid rgba(96, 128, 255, 0.2);
+}
