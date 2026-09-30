@@ -34,10 +34,9 @@ async def lifespan(app: FastAPI):
     # Create vector store base directory
     Path(settings.vector_store_path).mkdir(parents=True, exist_ok=True)
 
-    # Create database tables (development only; use Alembic in production)
-    if settings.app_env == "development":
-        await create_tables()
-        logger.info("Database tables created/verified")
+    # Always create database tables on startup (safe: does nothing if tables already exist)
+    await create_tables()
+    logger.info("Database tables created/verified")
 
     yield
 
@@ -72,7 +71,9 @@ app.add_middleware(
 
 upload_path = Path(settings.upload_dir)
 upload_path.mkdir(parents=True, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=str(upload_path)), name="uploads")
+# Guard: only mount if directory exists (always true after mkdir above)
+if upload_path.exists():
+    app.mount("/uploads", StaticFiles(directory=str(upload_path)), name="uploads")
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
 
